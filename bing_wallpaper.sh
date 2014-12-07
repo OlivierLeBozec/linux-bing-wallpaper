@@ -99,7 +99,6 @@ detectDE()
 }
 
 # Download the highest resolution
-while true; do
 
     TOMORROW=$(date --date="tomorrow" +%Y-%m-%d)
     TOMORROW=$(date --date="$TOMORROW 00:10:00" +%s)
@@ -114,8 +113,10 @@ while true; do
     # $picName contains the filename of the Bing pic of the day
     picName=$(echo ${picURL} | rev | cut -d "/" -f 1 | rev)
 
-    # Download the Bing pic of the day
-    curl -s -o $saveDir$picName $picURL
+    # Download the Bing pic of the day if not already there
+    if [ ! -f $saveDir$picName ]; then
+    curl -o $saveDir$picName $picURL
+    fi
 
     # Test if it's a pic
     file $saveDir$picName | grep HTML && rm -rf $saveDir$picName && continue
@@ -144,9 +145,5 @@ while true; do
     xfdesktop --reload
     fi
 
-    NOW=$(date +%s)
-    SLEEP=`echo $TOMORROW-$NOW|bc`
-    sleep $SLEEP
-done
 # Exit the script
 exit 0
