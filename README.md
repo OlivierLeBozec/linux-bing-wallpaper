@@ -2,7 +2,12 @@
 
 It sets Bing.com wallpaper of the Day as your Linux Desktop
 
-supports GNOME and KDE4.
+###### version 1.1
+Bux fixes (bing path has changed)
+Support XFCE (Xubuntu)
+
+###### version 1.0
+supports GNOME and KDE4
 
 ## Usage
 
@@ -10,7 +15,7 @@ Download these two scripts.
 
 Put them somewhere 
 
-Change mkt varible in bing_wallpaper.sh to yours.
+Change mkt variable in bing_wallpaper.sh to yours.
 
 Give them execution permission.
 

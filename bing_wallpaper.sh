@@ -1,6 +1,7 @@
 #!/bin/sh
 # Author: Marguerite Su <i@marguerite.su>
-# Version: 1.0
+# Bug fix : Olivier Le Bozec <olivier.le.bozec@gmail.com>
+# Version: 1.1
 # License: GPL-3.0
 # Description: Download Bing Wallpaper of the Day and set it as your Linux Desktop.
 
@@ -10,8 +11,8 @@ bing="www.bing.com"
 
 # The mkt parameter determines which Bing market you would like to
 # obtain your images from.
-# Valid values are: en-US, zh-CN, ja-JP, en-AU, en-UK, de-DE, en-NZ, en-CA.
-mkt="zh-CN"
+# Valid values are: en-US, zh-CN, ja-JP, en-AU, en-UK, de-DE, en-NZ, en-CA, fr-FR...
+mkt="fr-FR"
 
 # The idx parameter determines where to start from. 0 is the current day,
 # 1 the previous day, etc.
@@ -34,7 +35,6 @@ picOpts="zoom"
 
 # The file extension for the Bing pic
 picExt=".jpg"
-
 
 #detectDE
 detectDE()
@@ -104,7 +104,7 @@ while true; do
     TOMORROW=$(date --date="tomorrow" +%Y-%m-%d)
     TOMORROW=$(date --date="$TOMORROW 00:10:00" +%s)
     
-    for picRes in _1920x1200 _1366x768 _1280x720 _1024x768; do
+    for picRes in _1920x1080 _1366x768 _1280x720 _1024x768; do
 
     # Extract the relative URL of the Bing pic of the day from
     # the XML data retrieved from xmlURL, form the fully qualified
@@ -112,7 +112,7 @@ while true; do
     picURL=$bing$(echo $(curl -s $xmlURL) | grep -oP "<urlBase>(.*)</urlBase>" | cut -d ">" -f 2 | cut -d "<" -f 1)$picRes$picExt
 
     # $picName contains the filename of the Bing pic of the day
-    picName=${picURL#*2f}
+    picName=$(echo ${picURL} | rev | cut -d "/" -f 1 | rev)
 
     # Download the Bing pic of the day
     curl -s -o $saveDir$picName $picURL
@@ -124,7 +124,7 @@ while true; do
     done
     detectDE 
 
-    if [[ $DE = "gnome" ]]; then
+    if [ $DE = "gnome" ]; then
     # Set the GNOME3 wallpaper
     DISPLAY=:0 GSETTINGS_BACKEND=dconf gsettings set org.gnome.desktop.background picture-uri '"file://'$saveDir$picName'"'
 
@@ -132,12 +132,18 @@ while true; do
     DISPLAY=:0 GSETTINGS_BACKEND=dconf gsettings set org.gnome.desktop.background picture-options $picOpts
     fi
 
-    if [[ $DE = "kde" ]]; then
+    if [ $DE = "kde" ]; then
     test -e /usr/bin/xdotool || sudo zypper --no-refresh install xdotool
     test -e /usr/bin/gettext || sudo zypper --no-refresh install gettext-runtime
     ./kde4_set_wallpaper.sh $saveDir$picName
+    fi    
+
+    if [ $DE = "xfce" ]; then
+    xfconfFile=$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+    sed -i -e "s#\"image-path\" type=\"string\" value=.*/>#\"image-path\" type=\"string\" value=\"$saveDir$picName\"/>#" $xfconfFile
+    xfdesktop --reload
     fi
-    
+
     NOW=$(date +%s)
     SLEEP=`echo $TOMORROW-$NOW|bc`
     sleep $SLEEP
