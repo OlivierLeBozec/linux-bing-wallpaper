@@ -100,10 +100,10 @@ detectDE()
 
 # Download the highest resolution
 
-    TOMORROW=$(date --date="tomorrow" +%Y-%m-%d)
-    TOMORROW=$(date --date="$TOMORROW 00:10:00" +%s)
+TOMORROW=$(date --date="tomorrow" +%Y-%m-%d)
+TOMORROW=$(date --date="$TOMORROW 00:10:00" +%s)
     
-    for picRes in _1920x1080 _1366x768 _1280x720 _1024x768; do
+for picRes in _1920x1080 _1366x768 _1280x720 _1024x768; do
 
     # Extract the relative URL of the Bing pic of the day from
     # the XML data retrieved from xmlURL, form the fully qualified
@@ -120,30 +120,26 @@ detectDE()
 
     # Test if it's a pic
     file $saveDir$picName | grep HTML && rm -rf $saveDir$picName && continue
-
     break
-    done
-    detectDE 
+ done
 
-    if [ $DE = "gnome" ]; then
-    # Set the GNOME3 wallpaper
-    DISPLAY=:0 GSETTINGS_BACKEND=dconf gsettings set org.gnome.desktop.background picture-uri '"file://'$saveDir$picName'"'
+detectDE 
 
-    # Set the GNOME 3 wallpaper picture options
-    DISPLAY=:0 GSETTINGS_BACKEND=dconf gsettings set org.gnome.desktop.background picture-options $picOpts
-    fi
+if [ $DE = "gnome" ]; then
+   gconftool-2 -t str --set /desktop/gnome/background/picture_filename $saveDir$picName
+fi
 
-    if [ $DE = "kde" ]; then
+if [ $DE = "kde" ]; then
     test -e /usr/bin/xdotool || sudo zypper --no-refresh install xdotool
     test -e /usr/bin/gettext || sudo zypper --no-refresh install gettext-runtime
     ./kde4_set_wallpaper.sh $saveDir$picName
-    fi    
+fi    
 
-    if [ $DE = "xfce" ]; then
+if [ $DE = "xfce" ]; then
     xfconfFile=$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
     sed -i -e "s#\"image-path\" type=\"string\" value=.*/>#\"image-path\" type=\"string\" value=\"$saveDir$picName\"/>#" $xfconfFile
     xfdesktop --reload
-    fi
+fi
 
 # Exit the script
 exit 0
