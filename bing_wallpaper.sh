@@ -9,6 +9,9 @@
 # the Bing pic of the day
 bing="www.bing.com"
 
+# $proxy is need behind a proxy
+proxy="--proxy proxy.rennes.sii.fr:3128"
+
 # The mkt parameter determines which Bing market you would like to
 # obtain your images from.
 # Valid values are: en-US, zh-CN, ja-JP, en-AU, en-UK, de-DE, en-NZ, en-CA, fr-FR...
@@ -44,7 +47,10 @@ detectDE()
 
     if [ -n "${XDG_CURRENT_DESKTOP}" ]; then
       case "${XDG_CURRENT_DESKTOP}" in
-         GNOME)
+	 Unity)
+           DE=gnome;
+           ;;
+          GNOME)
            DE=gnome;
            ;;
          KDE)
@@ -91,11 +97,11 @@ detectDE()
       esac
     fi
 
-    if [ x"$DE" = x"gnome" ]; then
+#    if [ x"$DE" = x"gnome" ]; then
       # gnome-default-applications-properties is only available in GNOME 2.x
       # but not in GNOME 3.x
-      which gnome-default-applications-properties > /dev/null 2>&1  || DE="gnome3"
-    fi
+#      which gnome-default-applications-properties > /dev/null 2>&1  || DE="gnome3"
+#    fi
 }
 
 # Download the highest resolution
@@ -108,14 +114,14 @@ for picRes in _1920x1080 _1366x768 _1280x720 _1024x768; do
     # Extract the relative URL of the Bing pic of the day from
     # the XML data retrieved from xmlURL, form the fully qualified
     # URL for the pic of the day, and store it in $picURL
-    picURL=$bing$(echo $(curl -s $xmlURL) | grep -oP "<urlBase>(.*)</urlBase>" | cut -d ">" -f 2 | cut -d "<" -f 1)$picRes$picExt
+    picURL=$bing$(echo $(curl $proxy -s $xmlURL) | grep -oP "<urlBase>(.*)</urlBase>" | cut -d ">" -f 2 | cut -d "<" -f 1)$picRes$picExt
 
     # $picName contains the filename of the Bing pic of the day
     picName=$(echo ${picURL} | rev | cut -d "/" -f 1 | rev)
 
     # Download the Bing pic of the day if not already there
     if [ ! -f $saveDir$picName ]; then
-    curl -o $saveDir$picName $picURL
+    curl $proxy -o $saveDir$picName $picURL
     fi
 
     # Test if it's a pic
@@ -127,6 +133,7 @@ detectDE
 
 if [ $DE = "gnome" ]; then
    gconftool-2 -t str --set /desktop/gnome/background/picture_filename $saveDir$picName
+   gsettings set org.gnome.desktop.background picture-uri "file://$saveDir$picName"
 fi
 
 if [ $DE = "kde" ]; then
